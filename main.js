@@ -8,11 +8,11 @@ function analyser(){
   }
   var analyser;
   music.addEventListener("change",function(event){
-    var selectFile = document.getElementById('titleholder');
-    selectFile.style.display = "None";
-    newAudio = new Audio();
-    newAudio.src = URL.createObjectUrl(event.target.files[0]);
-    newAudio.addEventListener("canPlay", function(){
+    var back = document.getElementById('titleholder');
+    back.style.display = "None";
+    var newAudio = new Audio();
+    newAudio.src = URL.createObjectURL(event.target.files[0]);
+    newAudio.addEventListener('canplay', function(){
       var Source = audioCtx.createMediaElementSource(newAudio);
       analyser = audioCtx.createAnalyser();
       Source.connect(analyser);
@@ -24,7 +24,7 @@ function analyser(){
 
   function paint(){
     var freq = new Uint8Array(analyser.frequencyBinCount);
-    var radius = 20;
+    var radius = 30;
     var samplesNum = 10;
     var visual = visualBlock(width,height,radius,samplesNum);
     var sequenceQueue = [];
@@ -35,7 +35,7 @@ function analyser(){
 
     var svg = d3.select("svg");
     svg.selectAll("path")
-      .data(voronoi.triangles(sequence).map(d3.geom.polygon))
+      .data(voronoi.triangles(sequenceQueue).map(d3.geom.polygon))
       .enter().append("path")
       .attr("d", function(d){return "M" + d.join("L") + "Z";})
       .style("fill", function(d){return color(d.centroid());})
@@ -50,21 +50,21 @@ function analyser(){
     }
 
     function visualBlock(width,height,radius,sampleMax) {
-      R = 3 * radius * radius;
-      size = radius * Math.SQRT1_2;
-      cellWidth = Math.ceil(width / size);
-      cellHeight = Math.ceil(height / size);
-      cell = new Array(cellWidth * cellHeight);
-      sampleNum = 0;
-      queue = [];
+      var R = 3 * radius * radius,
+      size = radius * Math.SQRT1_2,
+      cellWidth = Math.ceil(width / size),
+      cellHeight = Math.ceil(height / size),
+      cell = new Array(cellWidth * cellHeight),
+      sampleNum = 0,
+      queue = [],
       queueSize = 0;
 
       return function () {
         if (!sampleNum)
           return sample(Math.random() * width, Math.random() * height);
         while (queueSize) {
-          sampleIndex = Math.ceil(Math.random() * queueSize);
-          sample_out = queue[sampleIndex];
+          var sampleIndex = Math.ceil(Math.random() * queueSize);
+          var sample_out = queue[sampleIndex];
           for (var i = 0; i < sampleMax; ++i) {
             var a = 2 * Math.PI * Math.random();
             var r = Math.random() * radius + radius;
@@ -78,8 +78,8 @@ function analyser(){
       };
 
       function far(x, y) {
-        var i = x / cellSize | 0, q,
-        j = y / cellSize | 0,
+        var i = x / size | 0, q,
+        j = y / size | 0,
           i0 = Math.max(i - 2, 0),
           j0 = Math.max(j - 2, 0),
           i1 = Math.min(i + 3, cellWidth),
@@ -103,10 +103,10 @@ function analyser(){
       function sample(x, y) {
         var ord = [x, y];
         queue.push(ord);
-        cell[cellWidth * (y / size | 0) + (x / size | 0)] = sample_out;
+        cell[cellWidth * (y / size | 0) + (x / size | 0)] = ord;
         ++sampleNum;
         ++queueSize;
-        return sample_out;
+        return ord;
       }
     }
 
@@ -126,7 +126,7 @@ function analyser(){
     var promise = new RSVP.Promise(function(yes){
       renderChart();
     });
-    promise.then(console.log("Hellow"));
+    promise.then(console.log("Done!"));
   }
 
 }
