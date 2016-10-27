@@ -11,14 +11,14 @@ function analyser(){
     var selectFile = document.getElementById('titleholder');
     selectFile.style.display = "None";
     newAudio = new Audio();
-    newAudio.src = window.URL.createObjectUrl(event.target.files[0]);
+    newAudio.src = URL.createObjectUrl(event.target.files[0]);
     newAudio.addEventListener("canPlay", function(){
       var Source = audioCtx.createMediaElementSource(newAudio);
       analyser = audioCtx.createAnalyser();
       Source.connect(analyser);
       Source.connect(audioCtx.destination);
       newAudio.play();
-      visualize();
+      paint();
     });
   });
 
@@ -26,10 +26,10 @@ function analyser(){
     var freq = new Uint8Array(analyser.frequencyBinCount);
     var radius = 20;
     var samplesNum = 10;
-    var visual = visualBlock(width,height,raadius,samplesNum);
+    var visual = visualBlock(width,height,radius,samplesNum);
     var sequenceQueue = [];
     var sequence;
-    while (sequence = visual()) sequenceQueue.push([sample[0]-radius,sample[1]-radius]);
+    while (sequence = visual()) sequenceQueue.push([sequence[0]-radius,sequence[1]-radius]);
     var voronoi = d3.geom.voronoi()
       .clipExtent([0,0],[width, height]);
 
@@ -49,7 +49,6 @@ function analyser(){
       return d3.lab(80 - (dx * dx + dy * dy) / 5000, dx / 7, dy / 7);
     }
 
-    var sampleMax = 30;
     function visualBlock(width,height,radius,sampleMax) {
       R = 3 * radius * radius;
       size = radius * Math.SQRT1_2;
@@ -69,8 +68,8 @@ function analyser(){
           for (var i = 0; i < sampleMax; ++i) {
             var a = 2 * Math.PI * Math.random();
             var r = Math.random() * radius + radius;
-            var x = s[0] + r * Math.cos(a);
-            var y = s[1] + r * Math.sin(a);
+            var x = sample_out[0] + r * Math.cos(a);
+            var y = sample_out[1] + r * Math.sin(a);
             if (0 <= x && x < width && 0 <= y && y < height && far(x, y)) return sample(x, y);
           }
           queue[i] = queue[--queueSize];
@@ -79,53 +78,51 @@ function analyser(){
       };
 
       function far(x, y) {
-        var i = x / cellSize | 0, q
+        var i = x / cellSize | 0, q,
         j = y / cellSize | 0,
           i0 = Math.max(i - 2, 0),
           j0 = Math.max(j - 2, 0),
-          i1 = Math.min(i + 3, gridWidth),
-          j1 = Math.min(j + 3, gridHeight);
+          i1 = Math.min(i + 3, cellWidth),
+          j1 = Math.min(j + 3, cellHeight),
+        radiusSquare = radius * radius;
 
         for (j = j0; j < j1; ++j) {
-          var o = j * gridWidth;
+          var o = j * cellWidth;
           for (i = i0; i < i1; ++i) {
-            if (s = grid[o + i]) {
+            if (s = cell[o + i]) {
               var s,
                 dx = s[0] - x,
                 dy = s[1] - y;
-              if (dx * dx + dy * dy < radius2) return false;
+              if (dx * dx + dy * dy < radiusSquare) return false;
             }
           }
         }
-
         return true;
       }
 
       function sample(x, y) {
         var ord = [x, y];
         queue.push(ord);
-        cell[cellWidth * (y / size | 0) + (x / size | 0)] = s;
+        cell[cellWidth * (y / size | 0) + (x / size | 0)] = sample_out;
         ++sampleNum;
         ++queueSize;
-        return s;
+        return sample_out;
       }
     }
 
     function renderChart() {
       requestAnimationFrame(renderChart);
-      // Copy frequency data to frequencyData array.
-      analyser.getByteFrequencyData(frequencyData);
-      // Update d3 chart with new data.
+      analyser.getByteFrequencyData(freq);
       svg.selectAll('path')
-        .data(frequencyData)
+        .data(freq)
         .style("display","block")
-        //.attr("fill", function(d){return d*0.01})
         .attr("fill-opacity", function(d){
           return d*0.012})
         .attr("stroke-opacity", function(d){
           return d*0.012
         });
     }
+
     var promise = new RSVP.Promise(function(yes){
       renderChart();
     });
