@@ -125,7 +125,7 @@ function analyser(){
     var promise = new RSVP.Promise(function(yes){
       renderChart();
     });
-    promise.then(console.log("Done!"));
+    promise.then(console.log(freq));
   }
 
 }
