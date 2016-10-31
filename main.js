@@ -24,8 +24,8 @@ function analyser(){
 
   function paint(){
     var freq = new Uint8Array(analyser.frequencyBinCount);
-    var radius = 30;
-    var samplesNum = 10;
+    radius = 30;
+    var samplesNum = 30;
     var visual = visualBlock(width,height,radius,samplesNum);
     var sequenceQueue = [];
     var sequence;
@@ -44,49 +44,49 @@ function analyser(){
 
     var dx, dy;
     function color(d){
-      dx = d[0] - width;
-      dy = d[1] - height;
-      return d3.lab(80 - (dx * dx + dy * dy) / 5000, dx / 7, dy / 7);
+      dx = d[0];
+      dy = d[1];
+      return d3.lab((dx * dx + dy * dy) / 5000, dx / 7, dy / 7);
     }
 
     function visualBlock(width,height,radius,sampleMax) {
-      var R = 3 * radius * radius,
-      size = radius * Math.SQRT1_2,
-      cellWidth = Math.ceil(width / size),
-      cellHeight = Math.ceil(height / size),
-      cell = new Array(cellWidth * cellHeight),
-      sampleNum = 0,
-      queue = [],
-      queueSize = 0;
+      var radiusSquare = radius * radius,
+        R = 3 * radiusSquare,
+        size = radius * Math.SQRT1_2,
+        cellWidth = Math.ceil(width / size),
+        cellHeight = Math.ceil(height / size),
+        cell = new Array(cellWidth * cellHeight),
+        sampleNum = 0,
+        queue = [],
+        queueSize = 0;
 
       return function () {
         if (!sampleNum)
-          return sample(Math.random() * width, Math.random() * height);
+          return sample(0, width * 0.5);
         while (queueSize) {
-          var sampleIndex = Math.ceil(Math.random() * queueSize);
+          var sampleIndex = Math.random() * queueSize | 0 ;
           var sample_out = queue[sampleIndex];
           for (var i = 0; i < sampleMax; ++i) {
             var a = 2 * Math.PI * Math.random();
-            var r = Math.random() * radius + radius;
+            var r = Math.sqrt(Math.random() * R + radiusSquare);
             var x = sample_out[0] + r * Math.cos(a);
             var y = sample_out[1] + r * Math.sin(a);
             if (0 <= x && x < width && 0 <= y && y < height && far(x, y)) return sample(x, y);
           }
-          queue[i] = queue[--queueSize];
+          queue[sampleIndex] = queue[--queueSize];
           queue.length = queueSize;
         }
       };
 
       function far(x, y) {
-        var i = x / size | 0, q,
-        j = y / size | 0,
+        var i = x / size | 0,
+          j = y / size | 0,
           i0 = Math.max(i - 2, 0),
           j0 = Math.max(j - 2, 0),
           i1 = Math.min(i + 3, cellWidth),
-          j1 = Math.min(j + 3, cellHeight),
-        radiusSquare = radius * radius;
+          j1 = Math.min(j + 3, cellHeight);
 
-        for (j = j0; j < j1; ++j) {
+          for(j = j0; j < j1; ++j){
           var o = j * cellWidth;
           for (i = i0; i < i1; ++i) {
             if (s = cell[o + i]) {
@@ -119,8 +119,7 @@ function analyser(){
         .attr("fill-opacity", function(d){
           return d*0.012})
         .attr("stroke-opacity", function(d){
-          return d*0.012
-        });
+          return d*0.012});
     }
 
     var promise = new RSVP.Promise(function(yes){
