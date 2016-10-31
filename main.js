@@ -26,7 +26,7 @@ function analyser(){
     var freq = new Uint8Array(analyser.frequencyBinCount);
     radius = 30;
     var samplesNum = 30;
-    var visual = visualBlock(width,height,radius,samplesNum);
+    var visual = visualBlock(width+2*radius,height+2*radius,radius,samplesNum);
     var sequenceQueue = [];
     var sequence;
     while (sequence = visual()) sequenceQueue.push([sequence[0]-radius,sequence[1]-radius]);
@@ -44,9 +44,9 @@ function analyser(){
 
     var dx, dy;
     function color(d){
-      dx = d[0];
-      dy = d[1];
-      return d3.lab((dx * dx + dy * dy) / 5000, dx / 7, dy / 7);
+      dx = Math.abs(d[0]-0.5*width);
+      dy = Math.abs(d[1]-0.5*height);
+      return d3.lab(60 - (dx * dx + dy * dy) / 10000, dx / 7, dy / 7);
     }
 
     function visualBlock(width,height,radius,sampleMax) {
