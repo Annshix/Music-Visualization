@@ -64,8 +64,8 @@ function analyser() {
       svg.selectAll('path')
         .data(freq)
         .style("display", "block")
-        .attr("fill-opacity", function (d) {return d * 0.003})
-        .attr("stroke-opacity", function (d) {return d * 0.0025});
+        .attr("fill-opacity", function (d) {return d * 0.002})
+        .attr("stroke-opacity", function (d) {return d * 0.002});
     }
 
       var promise = new RSVP.Promise(function (yes) {
